@@ -75,7 +75,8 @@ class ProcessHub
             $this->server,
             static function (string $watcher, $server) use (&$keys, &$acceptor): void {
                 // Error reporting suppressed since stream_socket_accept() emits E_WARNING on client accept failure.
-                while ((\set_error_handler(function(){})) && $client = @\stream_socket_accept($server, 0) && \restore_error_handler()) {  // Timeout of 0 to be non-blocking.
+                \set_error_handler(function(){});
+                while ($client = @\stream_socket_accept($server, 0)) {  // Timeout of 0 to be non-blocking.
                     asyncCall(static function () use ($client, &$keys, &$acceptor) {
                         $channel = new ChannelledSocket($client, $client);
 
@@ -98,6 +99,7 @@ class ProcessHub
                         $deferred->resolve($channel);
                     });
                 }
+                \restore_error_handler();
             }
         );
 
